@@ -8,31 +8,35 @@ import (
 )
 
 func List(repo, is, author string) (*IssuesSearchResult, error) {
-	raw := fmt.Sprintf("repo:%s is:issue", repo)
-
-	if len(is) > 0 {
-		raw += " is:" + is
-	}
-
-	if len(author) > 0 {
-		raw += " author:" + author
-	}
-
-	q := url.QueryEscape(raw)
-	r, err := http.Get(IssuesURL + "?q=" + q)
+	query := buildQuery(repo, is, author)
+	response, err := http.Get(IssuesURL + "?q=" + query)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Body.Close()
+	defer response.Body.Close()
 
-	if r.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("search query failed with status (%s)", r.Status)
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("search query failed with status (%s)", response.Status)
 	}
 
 	var result IssuesSearchResult
-	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
 	return &result, nil
+}
+
+func buildQuery(repo, is, author string) string {
+	query := fmt.Sprintf("repo:%s is:issue", repo)
+
+	if is != "" {
+		query += fmt.Sprintf(" is:%s", is)
+	}
+
+	if author != "" {
+		query += fmt.Sprintf(" author:%s", author)
+	}
+
+	return url.QueryEscape(query)
 }
