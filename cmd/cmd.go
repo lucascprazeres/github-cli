@@ -17,6 +17,7 @@ func RootCommand() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(ListCommand())
+	rootCmd.AddCommand(AuthCommand())
 
 	return rootCmd
 }
