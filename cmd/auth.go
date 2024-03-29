@@ -8,7 +8,7 @@ import (
 func AuthCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   `auth`,
-		Short: `auth issues on your own repositories`,
+		Short: `authenticate on github via OAuth2`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return commands.Auth()
 		},
