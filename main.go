@@ -1,8 +1,12 @@
 package main
 
-import "github.com/lucascprazeres/github-cli/cmd"
+import (
+	"github.com/lucascprazeres/github-cli/cmd"
+	"github.com/lucascprazeres/github-cli/internal/config/env"
+)
 
 func main() {
-	rootCmd := cmd.RootCommand()
-	rootCmd.Execute()
+	env.Setup()
+
+	cmd.RootCommand().Execute()
 }
