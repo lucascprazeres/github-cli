@@ -1,16 +1,19 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
-	"github.com/lucascprazeres/github-cli/internal/config/env"
-	"github.com/lucascprazeres/github-cli/internal/logging"
-	"github.com/lucascprazeres/github-cli/internal/utils"
+	"github-cli/internal/config/env"
+	"github-cli/internal/file"
+	"github-cli/internal/logging"
+
 	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -40,7 +43,15 @@ type User struct {
 	HTMLURL string `json:"html_url"`
 }
 
-const IssuesURL = "https://api.github.com/search/issues"
+type CreateIssueResult struct {
+	Title         string
+	Body          string
+	Number        int
+	URL           string
+	RepositoryURL string `json:"repository_url"`
+	User          *User
+	CreatedAt     time.Time `json:"created_at"`
+}
 
 func NewGithubService() *Github {
 	service := &Github{}
@@ -107,22 +118,82 @@ func (g *Github) GetToken() (*oauth2.Token, error) {
 }
 
 func (g *Github) GetIssues(repo, is, author string) (*IssuesSearchResult, error) {
-	query := utils.BuildQuery(repo, is, author)
-	response, err := http.Get(IssuesURL + "?q=" + query)
+	query := buildQuery(repo, is, author)
+	res, err := http.Get("https://api.github.com/search/issues" + "?q=" + query)
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer res.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("search query failed with status (%s)", response.Status)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("search query failed with status (%s)", res.Status)
 	}
 
 	var result IssuesSearchResult
-	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
 	return &result, nil
+}
 
+func buildQuery(repo, is, author string) string {
+	query := fmt.Sprintf("repo:%s is:issue", repo)
+
+	if is != "" {
+		query += fmt.Sprintf(" is:%s", is)
+	}
+
+	if author != "" {
+		query += fmt.Sprintf(" author:%s", author)
+	}
+
+	return url.QueryEscape(query)
+}
+
+func (g *Github) CreateIssue(repo, title, body string) (*CreateIssueResult, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/issues", repo)
+
+	reqBody, err := buildRequestBody(title, body)
+	if err != nil {
+		return &CreateIssueResult{}, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, reqBody)
+	if err != nil {
+		return &CreateIssueResult{}, err
+	}
+
+	credentials, err := file.Read("credentials.json")
+	if err != nil {
+		return &CreateIssueResult{}, err
+	}
+
+	token := fmt.Sprintf("Bearer %s", credentials["access_token"])
+
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("Authorization", token)
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+
+	client := http.Client{Timeout: 3 * time.Second}
+	res, err := client.Do(req)
+	if err != nil {
+		return &CreateIssueResult{}, err
+	}
+	defer res.Body.Close()
+
+	var result *CreateIssueResult
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return &CreateIssueResult{}, err
+	}
+
+	return result, nil
+}
+
+func buildRequestBody(title, body string) (*bytes.Reader, error) {
+	jsonBody, err := json.Marshal(map[string]string{"title": title, "body": body})
+	if err != nil {
+		return nil, fmt.Errorf("invalid params format")
+	}
+	return bytes.NewReader(jsonBody), nil
 }

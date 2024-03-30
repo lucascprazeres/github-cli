@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/lucascprazeres/github-cli/internal/commands"
+	"github-cli/internal/commands"
+
 	"github.com/spf13/cobra"
 )
 

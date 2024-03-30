@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/lucascprazeres/github-cli/internal/file"
-	"github.com/lucascprazeres/github-cli/internal/services"
+	"github-cli/internal/file"
+	"github-cli/internal/services"
 )
 
 func Auth() error {
