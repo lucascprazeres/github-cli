@@ -14,3 +14,18 @@ func Write(filename string, content any) error {
 
 	return json.NewEncoder(f).Encode(content)
 }
+
+func Read(filename string) (map[string]interface{}, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var content map[string]interface{}
+	err = json.Unmarshal(data, &content)
+	if err != nil {
+		return nil, err
+	}
+
+	return content, err
+}

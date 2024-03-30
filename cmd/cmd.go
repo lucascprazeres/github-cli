@@ -3,7 +3,8 @@ package cmd
 import (
 	"errors"
 
-	"github.com/lucascprazeres/github-cli/internal/logging"
+	"github-cli/internal/logging"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +19,7 @@ func RootCommand() *cobra.Command {
 
 	rootCmd.AddCommand(ListCommand())
 	rootCmd.AddCommand(AuthCommand())
+	rootCmd.AddCommand(CreateCommand())
 
 	return rootCmd
 }

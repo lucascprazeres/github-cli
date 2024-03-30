@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/lucascprazeres/github-cli/cmd"
-	"github.com/lucascprazeres/github-cli/internal/config/env"
+	"github-cli/cmd"
+	"github-cli/internal/config/env"
 )
 
 func main() {

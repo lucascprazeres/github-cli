@@ -1,4 +1,4 @@
-module github.com/lucascprazeres/github-cli
+module github-cli
 
 go 1.21.6
 

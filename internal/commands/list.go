@@ -3,8 +3,8 @@ package commands
 import (
 	"fmt"
 
-	"github.com/lucascprazeres/github-cli/internal/logging"
-	"github.com/lucascprazeres/github-cli/internal/services"
+	"github-cli/internal/logging"
+	"github-cli/internal/services"
 )
 
 func List(repo, is, author string) error {
